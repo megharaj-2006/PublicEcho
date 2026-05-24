@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-brand-dark text-slate-100;
+  }
+}
+
+/* Premium micro-animations & transitions */
+.transition-glow {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-glow:hover {
+  transform: translateY(-2px);
+  @apply border-brand-primary/50 shadow-neon;
+}
+
+/* High-tech Dark Mode filter for Leaflet Maps */
+.leaflet-container {
+  filter: invert(90%) hue-rotate(180deg) brightness(85%) contrast(90%);
+  background: #0B0F19 !important;
+  border-radius: 12px;
+}
+
+/* Premium glassmorphism scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0B0F19;
+}
+::-webkit-scrollbar-thumb {
+  background: #161D30;
+  border: 2px solid #0B0F19;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3B82F6;
+}
+
+/* Custom fade drawer animations */
+@keyframes slide-in {
+  from {
+    transform: translateY(15px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.3s ease-out forwards;
+}
