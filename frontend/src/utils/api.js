@@ -121,16 +121,55 @@ export const api = {
     return handleResponse(res);
   },
 
+  async getWards() {
+    const res = await fetch(`${API_BASE_URL}/grievances/wards`);
+    return handleResponse(res);
+  },
+
+  async acceptComplaint(id) {
+    const res = await fetch(`${API_BASE_URL}/grievances/${id}/accept`, {
+      method: 'POST',
+      headers: getAuthHeaders()
+    });
+    return handleResponse(res);
+  },
+
+  async rejectComplaint(id) {
+    const res = await fetch(`${API_BASE_URL}/grievances/${id}/reject`, {
+      method: 'POST',
+      headers: getAuthHeaders()
+    });
+    return handleResponse(res);
+  },
+
+  async postComplaintUpdate(id, message) {
+    const res = await fetch(`${API_BASE_URL}/grievances/${id}/update`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ update_message: message })
+    });
+    return handleResponse(res);
+  },
+
+  async resolveComplaint(id, solution_image_url, solution_description) {
+    const res = await fetch(`${API_BASE_URL}/grievances/${id}/resolve`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ solution_image_url, solution_description })
+    });
+    return handleResponse(res);
+  },
+
   async getLeaderboard() {
     const res = await fetch(`${API_BASE_URL}/grievances/leaderboard`);
     return handleResponse(res);
   },
 
-  async createGrievance(title, description, department_id, latitude, longitude, address, image_url) {
+  async createGrievance(title, description, category_id, ward_id, latitude, longitude, address, image_url) {
     const res = await fetch(`${API_BASE_URL}/grievances`, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ title, description, department_id, latitude, longitude, address, image_url })
+      body: JSON.stringify({ title, description, category_id, ward_id, latitude, longitude, address, image_url })
     });
     return handleResponse(res);
   },
@@ -183,11 +222,11 @@ export const api = {
   },
 
   // 3. New Official & Admin Upgrades APIs
-  async registerOfficial(name, email, password, jurisdiction_id, department_id, designation, office_id_proof, photo_proof) {
+  async registerOfficial(name, email, password, jurisdiction_id, department_id, designation, office_address, office_id_proof, photo_proof) {
     const res = await fetch(`${API_BASE_URL}/auth/official/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password, jurisdiction_id, department_id, designation, office_id_proof, photo_proof })
+      body: JSON.stringify({ name, email, password, jurisdiction_id, department_id, designation, office_address, office_id_proof, photo_proof })
     });
     return handleResponse(res);
   },

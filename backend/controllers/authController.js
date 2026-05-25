@@ -5,6 +5,12 @@ require('dotenv').config();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'publicecho_super_secure_jwt_secret_key_987654321';
 
+// Helper to parse domain
+const getEmailDomain = (email) => {
+  const parts = email.split('@');
+  return parts.length > 1 ? parts[1] : '';
+};
+
 // 1. Citizen Registration
 const registerCitizen = async (req, res) => {
   const { name, email, password, phone } = req.body;
@@ -14,11 +20,10 @@ const registerCitizen = async (req, res) => {
   }
 
   try {
-    // Check if email already exists in users or officials
-    const [existingUsers] = await db.query('SELECT id FROM users WHERE email = ?', [email]);
-    const [existingOfficials] = await db.query('SELECT id FROM officials WHERE email = ?', [email]);
+    // Check if email already exists in Users
+    const [existingUsers] = await db.query('SELECT user_id FROM Users WHERE email = ?', [email]);
 
-    if (existingUsers.length > 0 || existingOfficials.length > 0) {
+    if (existingUsers.length > 0) {
       return res.status(400).json({ message: 'Email already registered' });
     }
 
@@ -26,10 +31,10 @@ const registerCitizen = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // Insert user
+    // Insert user with role_id = 1 (citizen)
     const [result] = await db.query(
-      'INSERT INTO users (name, email, password_hash, phone, role) VALUES (?, ?, ?, ?, ?)',
-      [name, email, passwordHash, phone, 'citizen']
+      'INSERT INTO Users (name, email, password_hash, phone, role_id) VALUES (?, ?, ?, ?, 1)',
+      [name, email, passwordHash, phone]
     );
 
     const userId = result.insertId;
@@ -61,7 +66,13 @@ const loginCitizen = async (req, res) => {
   }
 
   try {
-    const [users] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+    const [users] = await db.query(
+      `SELECT u.*, r.role_name AS role
+       FROM Users u
+       INNER JOIN Roles r ON u.role_id = r.role_id
+       WHERE u.email = ?`,
+      [email]
+    );
 
     if (users.length === 0) {
       return res.status(400).json({ message: 'Invalid credentials' });
@@ -76,7 +87,7 @@ const loginCitizen = async (req, res) => {
 
     // Generate JWT token
     const token = jwt.sign(
-      { id: user.id, name: user.name, email: user.email, role: user.role },
+      { id: user.user_id, name: user.name, email: user.email, role: user.role },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
@@ -84,7 +95,7 @@ const loginCitizen = async (req, res) => {
     res.status(200).json({
       message: 'Login successful',
       token,
-      user: { id: user.id, name: user.name, email: user.email, role: user.role }
+      user: { id: user.user_id, name: user.name, email: user.email, role: user.role }
     });
   } catch (err) {
     console.error('Login Error:', err);
@@ -92,17 +103,10 @@ const loginCitizen = async (req, res) => {
   }
 };
 
-// Helper to parse domain
-const getEmailDomain = (email) => {
-  const parts = email.split('@');
-  return parts.length > 1 ? parts[1] : '';
-};
-
-// In-memory OTP code cache for Multi-Factor Authentication
-// Keys: email, Values: { code, official }
+// In-memory OTP cache
 const otpCache = new Map();
 
-// 3. Upgraded Official Login (With OTP & Domain Checks & Approval Status validation)
+// 3. Upgraded Official Login (OTP + Domain + Status)
 const loginOfficial = async (req, res) => {
   const { email, password } = req.body;
 
@@ -120,11 +124,15 @@ const loginOfficial = async (req, res) => {
     }
 
     const [officials] = await db.query(
-      `SELECT o.*, j.name AS jurisdiction_name, j.tier AS jurisdiction_tier, d.name AS department_name 
-       FROM officials o
-       INNER JOIN jurisdictions j ON o.jurisdiction_id = j.id
-       LEFT JOIN departments d ON o.department_id = d.id
-       WHERE o.email = ?`,
+      `SELECT u.user_id, u.name, u.email, u.password_hash,
+              o.official_id, o.designation, o.office_address, o.status,
+              w.ward_id, w.ward_name, w.zone_name,
+              d.department_id, d.department_name
+       FROM Users u
+       INNER JOIN Officials o ON u.user_id = o.user_id
+       INNER JOIN Wards w ON o.ward_id = w.ward_id
+       LEFT JOIN Departments d ON o.department_id = d.department_id
+       WHERE u.email = ? AND u.role_id = 2`,
       [email]
     );
 
@@ -154,7 +162,7 @@ const loginOfficial = async (req, res) => {
     res.status(200).json({
       otpRequired: true,
       email,
-      simulatedCode: code, // Shared in response so client can display it as simulated email
+      simulatedCode: code,
       message: 'MFA Code generated successfully.'
     });
   } catch (err) {
@@ -177,21 +185,23 @@ const verifyOfficialOTP = async (req, res) => {
   }
 
   const official = cached.official;
-  otpCache.delete(email); // Clear cache
+  otpCache.delete(email);
 
-  // Generate final JWT token
+  // Generate final JWT token matching expectations
   const token = jwt.sign(
     { 
-      id: official.id, 
+      id: official.official_id, 
+      user_id: official.user_id,
       name: official.name, 
       email: official.email, 
       role: 'official',
       designation: official.designation,
-      jurisdiction_id: official.jurisdiction_id,
-      jurisdiction_name: official.jurisdiction_name,
-      jurisdiction_tier: official.jurisdiction_tier,
+      jurisdiction_id: official.ward_id,
+      jurisdiction_name: official.ward_name,
+      jurisdiction_tier: official.zone_name,
       department_id: official.department_id,
-      department_name: official.department_name
+      department_name: official.department_name,
+      office_address: official.office_address
     },
     JWT_SECRET,
     { expiresIn: '24h' }
@@ -201,42 +211,56 @@ const verifyOfficialOTP = async (req, res) => {
     message: 'Verification complete. Access granted.',
     token,
     user: { 
-      id: official.id, 
+      id: official.official_id, 
+      user_id: official.user_id,
       name: official.name, 
       email: official.email, 
       role: 'official',
       designation: official.designation,
-      jurisdiction_id: official.jurisdiction_id,
-      jurisdiction_name: official.jurisdiction_name,
-      jurisdiction_tier: official.jurisdiction_tier,
+      jurisdiction_id: official.ward_id,
+      jurisdiction_name: official.ward_name,
+      jurisdiction_tier: official.zone_name,
       department_id: official.department_id,
-      department_name: official.department_name
+      department_name: official.department_name,
+      office_address: official.office_address
     }
   });
 };
 
-// 3.2 Register a New Official (Requires proofs & domain check)
+// 3.2 Register a New Official
 const registerOfficial = async (req, res) => {
-  const { name, email, password, jurisdiction_id, department_id, designation, office_id_proof, photo_proof } = req.body;
+  const { name, email, password, jurisdiction_id, department_id, designation, office_address, office_id_proof, photo_proof } = req.body;
 
-  if (!name || !email || !password || !jurisdiction_id || !designation || !office_id_proof || !photo_proof) {
-    return res.status(400).json({ message: 'All fields including ID proof and self photo are mandatory.' });
+  // Validate required inputs
+  if (!name || !email || !password || !jurisdiction_id || !designation || !office_address || !office_id_proof || !photo_proof) {
+    return res.status(400).json({ message: 'All fields including ID proof, self photo, and office address are mandatory.' });
   }
+
+  let parsedDeptId = 0;
+  if (department_id !== undefined && department_id !== null && department_id !== '' && department_id !== 'null' && department_id !== 'undefined') {
+    const parsed = parseInt(department_id);
+    if (!isNaN(parsed)) {
+      parsedDeptId = parsed;
+    }
+  }
+
+  const connection = await db.getConnection();
+  await connection.beginTransaction();
 
   try {
     // Validate domain
     const domain = getEmailDomain(email);
-    const [matchingDomains] = await db.query('SELECT id FROM official_domains WHERE domain_name = ?', [domain]);
+    const [matchingDomains] = await connection.query('SELECT id FROM official_domains WHERE domain_name = ?', [domain]);
 
     if (matchingDomains.length === 0) {
+      await connection.rollback();
       return res.status(400).json({ message: 'Registration Denied: The provided email domain is not a valid official ID.' });
     }
 
-    // Check existing
-    const [existingOfficials] = await db.query('SELECT id FROM officials WHERE email = ?', [email]);
-    const [existingUsers] = await db.query('SELECT id FROM users WHERE email = ?', [email]);
-
-    if (existingOfficials.length > 0 || existingUsers.length > 0) {
+    // Check existing in Users
+    const [existingUsers] = await connection.query('SELECT user_id FROM Users WHERE email = ?', [email]);
+    if (existingUsers.length > 0) {
+      await connection.rollback();
       return res.status(400).json({ message: 'Email address already registered.' });
     }
 
@@ -244,19 +268,30 @@ const registerOfficial = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // Save as Pending
-    await db.query(
-      `INSERT INTO officials (name, email, password_hash, jurisdiction_id, department_id, designation, status, office_id_proof, photo_proof)
-       VALUES (?, ?, ?, ?, ?, ?, 'Pending', ?, ?)`,
-      [name, email, passwordHash, jurisdiction_id, department_id || null, designation, office_id_proof, photo_proof]
+    // 1. Insert into Users (role_id = 2 for official)
+    const [userResult] = await connection.query(
+      'INSERT INTO Users (name, email, password_hash, phone, role_id) VALUES (?, ?, ?, "Pending", 2)',
+      [name, email, passwordHash]
+    );
+    const userId = userResult.insertId;
+
+    // 2. Insert into Officials
+    await connection.query(
+      `INSERT INTO Officials (user_id, department_id, ward_id, designation, office_address, status, office_id_proof, photo_proof)
+       VALUES (?, ?, ?, ?, ?, 'Pending', ?, ?)`,
+      [userId, parsedDeptId, jurisdiction_id, designation, office_address, office_id_proof, photo_proof]
     );
 
+    await connection.commit();
     res.status(201).json({
       message: 'Official registration submitted successfully. Awaiting Admin verification.'
     });
   } catch (err) {
+    await connection.rollback();
     console.error('Official Register Error:', err);
     res.status(500).json({ message: 'Server error during official registration', error: err.message });
+  } finally {
+    connection.release();
   }
 };
 
@@ -264,18 +299,25 @@ const registerOfficial = async (req, res) => {
 const getProfile = async (req, res) => {
   try {
     if (req.user.role === 'citizen' || req.user.role === 'admin') {
-      const [users] = await db.query('SELECT id, name, email, phone, role, created_at FROM users WHERE id = ?', [req.user.id]);
+      const [users] = await db.query(
+        `SELECT u.user_id AS id, u.name, u.email, u.phone, r.role_name AS role, u.created_at 
+         FROM Users u
+         INNER JOIN Roles r ON u.role_id = r.role_id
+         WHERE u.user_id = ?`,
+        [req.user.id]
+      );
       if (users.length === 0) return res.status(404).json({ message: 'User not found' });
       return res.json(users[0]);
     } else if (req.user.role === 'official') {
       const [officials] = await db.query(
-        `SELECT o.id, o.name, o.email, o.designation, o.created_at,
-                j.name AS jurisdiction_name, j.tier AS jurisdiction_tier,
-                d.name AS department_name
-         FROM officials o
-         INNER JOIN jurisdictions j ON o.jurisdiction_id = j.id
-         LEFT JOIN departments d ON o.department_id = d.id
-         WHERE o.id = ?`,
+        `SELECT o.official_id AS id, u.name, u.email, o.designation, u.created_at,
+                w.ward_name AS jurisdiction_name, w.zone_name AS jurisdiction_tier,
+                d.department_name, o.office_address
+         FROM Officials o
+         INNER JOIN Users u ON o.user_id = u.user_id
+         INNER JOIN Wards w ON o.ward_id = w.ward_id
+         LEFT JOIN Departments d ON o.department_id = d.department_id
+         WHERE o.official_id = ?`,
         [req.user.id]
       );
       if (officials.length === 0) return res.status(404).json({ message: 'Official not found' });
@@ -297,20 +339,26 @@ const loginGoogle = async (req, res) => {
   }
 
   try {
-    let [users] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+    let [users] = await db.query(
+      `SELECT u.*, r.role_name AS role 
+       FROM Users u 
+       INNER JOIN Roles r ON u.role_id = r.role_id
+       WHERE u.email = ?`, 
+      [email]
+    );
     let user;
 
     if (users.length === 0) {
       const dummyPassword = await bcrypt.hash(Math.random().toString(36), 10);
       const [result] = await db.query(
-        'INSERT INTO users (name, email, password_hash, phone, role) VALUES (?, ?, ?, ?, ?)',
-        [name, email, dummyPassword, 'Google Linked', 'citizen']
+        'INSERT INTO Users (name, email, password_hash, phone, role_id) VALUES (?, ?, ?, ?, 1)',
+        [name, email, dummyPassword, 'Google Linked']
       );
       
       const newUserId = result.insertId;
       user = { id: newUserId, name, email, role: 'citizen' };
     } else {
-      user = users[0];
+      user = { id: users[0].user_id, name: users[0].name, email: users[0].email, role: users[0].role };
     }
 
     const token = jwt.sign(
@@ -338,15 +386,16 @@ const getPendingOfficials = async (req, res) => {
 
   try {
     const [pendings] = await db.query(
-      `SELECT o.id, o.name, o.email, o.designation, o.created_at,
-              o.office_id_proof, o.photo_proof,
-              j.name AS jurisdiction_name, j.tier AS jurisdiction_tier,
-              d.name AS department_name
-       FROM officials o
-       INNER JOIN jurisdictions j ON o.jurisdiction_id = j.id
-       LEFT JOIN departments d ON o.department_id = d.id
+      `SELECT o.official_id AS id, u.name, u.email, o.designation, u.created_at,
+              o.office_id_proof, o.photo_proof, o.office_address,
+              w.ward_name AS jurisdiction_name, w.zone_name AS jurisdiction_tier,
+              d.department_name
+       FROM Officials o
+       INNER JOIN Users u ON o.user_id = u.user_id
+       INNER JOIN Wards w ON o.ward_id = w.ward_id
+       LEFT JOIN Departments d ON o.department_id = d.department_id
        WHERE o.status = 'Pending'
-       ORDER BY o.created_at ASC`
+       ORDER BY u.created_at ASC`
     );
     res.json(pendings);
   } catch (err) {
@@ -364,7 +413,7 @@ const approveOfficial = async (req, res) => {
   const { id } = req.params;
 
   try {
-    await db.query('UPDATE officials SET status = "Approved" WHERE id = ?', [id]);
+    await db.query('UPDATE Officials SET status = "Approved" WHERE official_id = ?', [id]);
     res.json({ message: 'Official registration request approved successfully.' });
   } catch (err) {
     console.error('Approve Error:', err);
@@ -381,7 +430,7 @@ const rejectOfficial = async (req, res) => {
   const { id } = req.params;
 
   try {
-    await db.query('UPDATE officials SET status = "Rejected" WHERE id = ?', [id]);
+    await db.query('UPDATE Officials SET status = "Rejected" WHERE official_id = ?', [id]);
     res.json({ message: 'Official registration request rejected.' });
   } catch (err) {
     console.error('Reject Error:', err);
