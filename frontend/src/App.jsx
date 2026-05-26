@@ -202,6 +202,25 @@ export default function App() {
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Auto-clear toast notifications after 4 seconds
+  useEffect(() => {
+    if (successMsg) {
+      const timer = setTimeout(() => {
+        setSuccessMsg('');
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMsg]);
+
+  useEffect(() => {
+    if (errorMsg) {
+      const timer = setTimeout(() => {
+        setErrorMsg('');
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [errorMsg]);
+
   // Responsive Sidebar State
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
