@@ -201,6 +201,7 @@ export default function App() {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
 
   // Auto-clear toast notifications after 4 seconds
   useEffect(() => {
@@ -603,7 +604,7 @@ export default function App() {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
-    setLoading(true);
+    setAuthLoading(true);
 
     try {
       if (view === 'register') {
@@ -619,12 +620,12 @@ export default function App() {
           const domain = emailParts.length > 1 ? emailParts[1] : '';
           if (!validOfficialDomains.includes(domain)) {
             showError(`Access Denied: Non-official domain '@${domain}' used! Authorized suffixes: ${validOfficialDomains.join(', ')}.`);
-            setLoading(false);
+            setAuthLoading(false);
             return;
           }
           if (!offJurisdictionId || !offDesignation || !offOfficeAddress || !offIdProof || !offPhotoProof) {
             showError('All fields including ID Card, Portrait, and Office Address are mandatory.');
-            setLoading(false);
+            setAuthLoading(false);
             return;
           }
 
@@ -662,7 +663,7 @@ export default function App() {
           const domain = emailParts.length > 1 ? emailParts[1] : '';
           if (!validOfficialDomains.includes(domain)) {
             showError(`Access Denied: Non-official domain '@${domain}' used! Authorized suffixes: ${validOfficialDomains.join(', ')}.`);
-            setLoading(false);
+            setAuthLoading(false);
             return;
           }
 
@@ -689,7 +690,7 @@ export default function App() {
     } catch (err) {
       showError(err.message);
     } finally {
-      setLoading(false);
+      setAuthLoading(false);
     }
   };
 
@@ -698,7 +699,7 @@ export default function App() {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
-    setLoading(true);
+    setAuthLoading(true);
 
     try {
       const data = await api.verifyOTP(otpEmail, otpCode);
@@ -712,7 +713,7 @@ export default function App() {
     } catch (err) {
       showError(err.message);
     } finally {
-      setLoading(false);
+      setAuthLoading(false);
     }
   };
 
@@ -738,7 +739,7 @@ export default function App() {
   const handleGoogleAuth = async () => {
     setErrorMsg('');
     setSuccessMsg('');
-    setLoading(true);
+    setAuthLoading(true);
 
     try {
       const result = await signInWithPopup(auth, googleProvider);
@@ -764,7 +765,7 @@ export default function App() {
         showError(err.message);
       }
     } finally {
-      setLoading(false);
+      setAuthLoading(false);
     }
   };
 
@@ -1866,10 +1867,10 @@ export default function App() {
 
                     <button 
                       type="submit" 
-                      disabled={loading}
+                      disabled={authLoading}
                       className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl text-sm transition shadow-sm mt-2 flex items-center justify-center gap-2"
                     >
-                      {loading ? 'Processing...' : registerRole === 'citizen' ? 'Create Citizen Profile' : 'Submit Verification Request'}
+                      {authLoading ? 'Processing...' : registerRole === 'citizen' ? 'Create Citizen Profile' : 'Submit Verification Request'}
                     </button>
                   </form>
 
@@ -1959,10 +1960,10 @@ export default function App() {
                     </div>
 
                     <button 
-                      type="submit" disabled={loading}
+                      type="submit" disabled={authLoading}
                       className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl text-sm transition shadow-sm mt-2 flex items-center justify-center gap-2"
                     >
-                      Authenticate Credentials
+                      {authLoading ? 'Authenticating...' : 'Authenticate Credentials'}
                     </button>
                   </form>
 
@@ -2027,10 +2028,10 @@ export default function App() {
               </div>
 
               <button 
-                type="submit" disabled={loading}
+                type="submit" disabled={authLoading}
                 className="w-full bg-brand-secondary hover:bg-brand-secondary/90 text-white font-bold py-2 rounded-lg text-xs transition shadow-neon flex items-center justify-center gap-1.5"
               >
-                {loading ? 'Authenticating...' : 'Submit Verification Key'}
+                {authLoading ? 'Authenticating...' : 'Submit Verification Key'}
               </button>
             </form>
 

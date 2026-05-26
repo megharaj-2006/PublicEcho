@@ -550,10 +550,10 @@ const getLeaderboard = async (req, res) => {
           COALESCE(ROUND(4.2 + (o.official_id % 8) * 0.1, 1), 4.6) AS avg_quality_score,
           COALESCE(ROUND(4.1 + (o.official_id % 9) * 0.1, 1), 4.7) AS avg_communication_score,
           COALESCE(ROUND(4.1 + (o.official_id % 7) * 0.1, 1), 4.6) AS composite_rating
-      FROM officials o
-      INNER JOIN users u ON o.user_id = u.user_id
-      INNER JOIN wards w ON o.ward_id = w.ward_id
-      LEFT JOIN complaintassignments ca ON o.official_id = ca.official_id
+      FROM Officials o
+      INNER JOIN Users u ON o.user_id = u.user_id
+      INNER JOIN Wards w ON o.ward_id = w.ward_id
+      LEFT JOIN ComplaintAssignments ca ON o.official_id = ca.official_id
       WHERE o.status = 'Approved'
       GROUP BY o.official_id, u.name, o.designation, w.ward_name
       ORDER BY composite_rating DESC, total_cases_rated DESC
