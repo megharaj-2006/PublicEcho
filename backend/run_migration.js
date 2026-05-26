@@ -6,10 +6,15 @@ require('dotenv').config();
 async function migrate() {
   console.log("Initializing local database migration for PublicEcho...");
   try {
+    const dbHost = process.env.DB_HOST || 'localhost';
+    const isLocalhost = dbHost === 'localhost' || dbHost === '127.0.0.1';
+
     const connection = await mysql.createConnection({
-      host: process.env.DB_HOST || 'localhost',
+      host: dbHost,
       user: process.env.DB_USER || 'root',
       password: process.env.DB_PASSWORD || 'root123',
+      port: process.env.DB_PORT || 3306,
+      ssl: isLocalhost ? undefined : { rejectUnauthorized: false },
       multipleStatements: true
     });
     console.log("✅ Connection established. Loading DDL/DML script...");
