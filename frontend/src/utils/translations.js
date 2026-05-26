@@ -11,7 +11,7 @@ export const translations = {
     "about": "About",
     "logout": "Log Out",
     "sign_in": "Sign In",
-    "report_issue": "Report Issue",
+    "report_issue": "Register",
     "enter_dashboard": "Enter Dashboard",
 
     // Dashboard General
@@ -115,7 +115,7 @@ export const translations = {
     "about": "ನಮ್ಮ ಬಗ್ಗೆ",
     "logout": "ಲಾಗ್ ಔಟ್",
     "sign_in": "ಸೈನ್ ಇನ್",
-    "report_issue": "ದೂರು ಸಲ್ಲಿಸಿ",
+    "report_issue": "ನೋಂದಾಯಿಸಿ",
     "enter_dashboard": "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್ ಪ್ರವೇಶಿಸಿ",
 
     // Dashboard General
@@ -219,7 +219,7 @@ export const translations = {
     "about": "हमारे बारे में",
     "logout": "लॉग आउट",
     "sign_in": "साइन इन",
-    "report_issue": "शिकायत दर्ज करें",
+    "report_issue": "रजिस्टर करें",
     "enter_dashboard": "डैशबोर्ड में प्रवेश करें",
 
     // Dashboard General
