@@ -692,6 +692,7 @@ export default function App() {
       setPassword('');
       setPhone('');
       setOffDesignation('');
+      setOffOfficeAddress('');
       setOffJurisdictionId('');
       setOffDepartmentId('');
       setOffIdProof('');
@@ -1848,6 +1849,17 @@ export default function App() {
                               <option key={d.id} value={d.id} className="dark:bg-[#0c0c0e]">{d.name}</option>
                             ))}
                           </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Physical Office Address *</label>
+                          <textarea 
+                            rows="2"
+                            value={offOfficeAddress} onChange={(e) => setOffOfficeAddress(e.target.value)}
+                            placeholder="e.g. BBMP Ward 150 Office, 4th Cross Rd, Bellandur, Bengaluru"
+                            className="w-full px-3.5 py-2 border border-neutral-200 dark:border-neutral-800 bg-transparent rounded-lg text-sm text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:border-blue-600 transition"
+                            required
+                          ></textarea>
                         </div>
 
                         {/* Official uploader slots for ID Proof and Photo */}
