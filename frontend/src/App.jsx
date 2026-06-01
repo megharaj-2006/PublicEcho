@@ -1098,16 +1098,9 @@ export default function App() {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (file.size > 1 * 1024 * 1024) {
-      showError("Please choose a smaller image (limit is 1MB to ensure stable DB execution).");
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setSolutionImage(reader.result);
-    };
-    reader.readAsDataURL(file);
+    compressAndResizeImage(file, (base64Result) => {
+      setSolutionImage(base64Result);
+    });
   };
 
   const renderOfficialComplaintCard = (g) => {
