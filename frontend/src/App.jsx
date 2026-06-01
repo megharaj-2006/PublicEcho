@@ -732,7 +732,7 @@ export default function App() {
     setErrorMsg('');
     setSuccessMsg('');
     try {
-      if (action === 'approve') {
+      if (action.toLowerCase() === 'approve') {
         await api.approveOfficial(officialId);
         setSuccessMsg('Official successfully verified and approved!');
       } else {
