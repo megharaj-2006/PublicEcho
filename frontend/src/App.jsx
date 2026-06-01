@@ -786,25 +786,64 @@ export default function App() {
     setMobileMenuOpen(false);
   };
 
+  // Helper to compress and resize images on the client side
+  const compressAndResizeImage = (file, callback) => {
+    // If not an image file, fallback to standard FileReader reading
+    if (!file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onloadend = () => callback(reader.result);
+      reader.readAsDataURL(file);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX_WIDTH = 1000;
+        const MAX_HEIGHT = 1000;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height = Math.round((height * MAX_WIDTH) / width);
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width = Math.round((width * MAX_HEIGHT) / height);
+            height = MAX_HEIGHT;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Compress image to JPEG format with 70% quality (ideal for DB storage and previews)
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+        callback(dataUrl);
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
   // Base64 Reader for Proofs
   const handleProofSelection = (e, target) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (file.size > 1 * 1024 * 1024) {
-      showError("Please upload a smaller image file (limit 1MB to protect DB storage).");
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
+    compressAndResizeImage(file, (base64Result) => {
       if (target === 'id') {
-        setOffIdProof(reader.result);
+        setOffIdProof(base64Result);
       } else {
-        setOffPhotoProof(reader.result);
+        setOffPhotoProof(base64Result);
       }
-    };
-    reader.readAsDataURL(file);
+    });
   };
 
   // Picture Upload Actions (Converts images to Base64 data URLs)
@@ -812,16 +851,9 @@ export default function App() {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (file.size > 1 * 1024 * 1024) {
-      showError("Please choose a smaller image (limit is 1MB to ensure stable DB execution).");
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setNewImg(reader.result);
-    };
-    reader.readAsDataURL(file);
+    compressAndResizeImage(file, (base64Result) => {
+      setNewImg(base64Result);
+    });
   };
 
   // HTML5 Browser Geolocation GPS Finder
