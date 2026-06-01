@@ -271,6 +271,15 @@ export default function App() {
   }, [isDarkMode]);
 
   const showError = (msg) => {
+    if (msg && (msg.includes('Invalid or Expired Token') || msg.includes('Access Denied: No Token Provided'))) {
+      api.logout();
+      setUser(null);
+      setView('login');
+      setAuthRole('citizen');
+      setErrorMsg('Your session has expired. Please sign in again.');
+      setMobileMenuOpen(false);
+      return;
+    }
     setErrorMsg(msg);
     setSuccessMsg('');
   };
