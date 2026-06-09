@@ -39,7 +39,11 @@ app.use((err, req, res, next) => {
 });
 
 // Start Server
-app.listen(PORT, () => {
-  console.log(`🚀 PublicEcho Express Server is running on port ${PORT}`);
-  console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`🚀 PublicEcho Express Server is running on port ${PORT}`);
+    console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
+  });
+}
+
+module.exports = app;

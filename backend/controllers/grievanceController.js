@@ -117,7 +117,7 @@ const getOfficialDashboard = async (req, res) => {
          INNER JOIN ComplaintStatus s ON c.status_id = s.status_id
          INNER JOIN Wards w ON c.ward_id = w.ward_id
          INNER JOIN Users u ON c.user_id = u.user_id
-         WHERE c.ward_id = ? AND c.status_id IN (1, 2, 3)
+         WHERE c.ward_id = ?
          GROUP BY c.complaint_id
          ORDER BY upvote_count DESC, c.created_at DESC`,
         [official.ward_id]
@@ -138,7 +138,7 @@ const getOfficialDashboard = async (req, res) => {
          INNER JOIN ComplaintStatus s ON c.status_id = s.status_id
          INNER JOIN Wards w ON c.ward_id = w.ward_id
          INNER JOIN Users u ON c.user_id = u.user_id
-         WHERE c.ward_id = ? AND c.category_id = ? AND c.status_id IN (1, 2, 3)
+         WHERE c.ward_id = ? AND c.category_id = ?
          GROUP BY c.complaint_id
          ORDER BY upvote_count DESC, c.created_at DESC`,
         [official.ward_id, official.department_id]
@@ -156,7 +156,7 @@ const getOfficialDashboard = async (req, res) => {
          INNER JOIN ComplaintStatus s ON c.status_id = s.status_id
          INNER JOIN Wards w ON c.ward_id = w.ward_id
          INNER JOIN Users u ON c.user_id = u.user_id
-         WHERE c.ward_id = ? AND c.category_id != ? AND c.status_id IN (1, 2, 3)
+         WHERE c.ward_id = ? AND c.category_id != ?
          GROUP BY c.complaint_id
          ORDER BY upvote_count DESC, c.created_at DESC`,
         [official.ward_id, official.department_id]
