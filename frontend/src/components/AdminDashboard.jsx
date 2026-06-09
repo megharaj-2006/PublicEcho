@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { ShieldAlert, Check, X, Search, FileText, CheckCircle2, UserCheck, Users } from 'lucide-react';
 
-export default function AdminDashboard({ pendingOfficials, handleAdminApproval }) {
+export default function AdminDashboard({ pendingOfficials = [], handleAdminApproval }) {
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredOfficials = pendingOfficials.filter(off => 
-    off.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    off.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    off.designation.toLowerCase().includes(searchTerm.toLowerCase())
+    (off.name || '').toLowerCase().includes((searchTerm || '').toLowerCase()) || 
+    (off.email || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
+    (off.designation || '').toLowerCase().includes((searchTerm || '').toLowerCase())
   );
 
   return (

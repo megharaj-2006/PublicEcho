@@ -69,3 +69,25 @@
 .animate-slide-up {
   animation: slide-up 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* Theme-adaptive select options styling to prevent white-on-white text in dark mode */
+select {
+  background-color: #ffffff !important;
+  color: #171717 !important;
+}
+
+select option {
+  background-color: #ffffff !important;
+  color: #171717 !important;
+}
+
+.dark select {
+  background-color: #0c0c0e !important;
+  color: #f5f5f5 !important;
+}
+
+.dark select option {
+  background-color: #0c0c0e !important;
+  color: #f5f5f5 !important;
+}
+

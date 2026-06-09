@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Plus, Award, AlertTriangle, ShieldCheck, MapPin, Clock, Search, RefreshCw, ChevronRight } from 'lucide-react';
 
 export default function CitizenDashboard({ 
-  user, setView, grievances, viewTimeline, handleUpvote, setSelectedFeedbackGrievance, 
+  user, setView, grievances = [], viewTimeline, handleUpvote, setSelectedFeedbackGrievance, 
   setShowFileModal, setNewLat, setNewLng, setNewAddress, getStatusBadge,
   t = (key) => key, language = 'en'
 }) {
@@ -16,7 +16,7 @@ export default function CitizenDashboard({
   const contributionScore = (grievances.length * 10) + (resolvedCount * 15);
 
   const filteredGrievances = grievances.filter(g => {
-    const matchSearch = g.title.toLowerCase().includes(searchTerm.toLowerCase()) || g.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchSearch = (g.title || '').toLowerCase().includes(searchTerm.toLowerCase()) || (g.description || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchStatus = statusFilter === 'all' || g.status === statusFilter;
     return matchSearch && matchStatus;
   });

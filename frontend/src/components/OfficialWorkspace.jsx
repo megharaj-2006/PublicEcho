@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Briefcase, MapPin, Clock, Search, AlertTriangle, ShieldCheck, RefreshCw, CheckCircle2, ChevronRight, X } from 'lucide-react';
 
 export default function OfficialWorkspace({ 
-  user, departmentComplaints, otherComplaints, handleAcceptComplaint, handleRejectComplaint, 
+  user, departmentComplaints = [], otherComplaints = [], handleAcceptComplaint, handleRejectComplaint, 
   setShowUpdateDialogId, setShowResolveModal, viewTimeline, getStatusBadge 
 }) {
   const [workspaceFocus, setWorkspaceFocus] = useState('focus'); // 'focus' (My Specialty) | 'ward' (Other Specialty)
@@ -13,8 +13,8 @@ export default function OfficialWorkspace({
 
   // Filter list by selected column tab and search
   const filteredList = activeComplaintsList.filter(g => {
-    const matchesSearch = g.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          g.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (g.title || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          (g.description || '').toLowerCase().includes(searchTerm.toLowerCase());
     
     let matchesTab = false;
     if (activeTab === 'Pending') {

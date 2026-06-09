@@ -377,7 +377,7 @@ export default function App() {
 
   // Track location and fetch popular problems
   useEffect(() => {
-    if (view === 'landing') {
+    if (view === 'landing' || view === 'explore') {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (pos) => {
@@ -2148,7 +2148,7 @@ export default function App() {
                     onChange={(e) => {
                       setWardSearchQuery(e.target.value);
                       setShowWardDropdown(true);
-                      const match = jurisdictions.find(j => j.name.toLowerCase() === e.target.value.toLowerCase());
+                      const match = jurisdictions.find(j => (j.name || '').toLowerCase() === (e.target.value || '').toLowerCase());
                       if (match) {
                         setNewWardId(match.id.toString());
                       } else {
@@ -2166,7 +2166,7 @@ export default function App() {
                   {showWardDropdown && (
                     <div className="absolute left-0 right-0 z-30 max-h-48 overflow-y-auto bg-brand-card border border-brand-border rounded-lg mt-1 shadow-xl">
                       {jurisdictions
-                        .filter(j => j.name.toLowerCase().includes(wardSearchQuery.toLowerCase()))
+                        .filter(j => (j.name || '').toLowerCase().includes((wardSearchQuery || '').toLowerCase()))
                         .map(j => (
                           <div
                             key={j.id}
@@ -2185,7 +2185,7 @@ export default function App() {
                             {j.name}
                           </div>
                         ))}
-                      {jurisdictions.filter(j => j.name.toLowerCase().includes(wardSearchQuery.toLowerCase())).length === 0 && (
+                      {jurisdictions.filter(j => (j.name || '').toLowerCase().includes((wardSearchQuery || '').toLowerCase())).length === 0 && (
                         <div className="px-3.5 py-2 text-xs text-slate-500 italic text-left">No wards found</div>
                       )}
                     </div>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, MapPin, Grid, List, Map, Compass, ShieldAlert, Award, Clock, Megaphone, ArrowUpRight, ChevronRight } from 'lucide-react';
 
 export default function ExploreView({ 
-  user, setView, popularGrievances, handleUpvote, departments, jurisdictions, getStatusBadge,
+  user, setView, popularGrievances = [], handleUpvote, departments = [], jurisdictions = [], getStatusBadge,
   t = (key) => key, language = 'en'
 }) {
   const [exploreGridView, setExploreGridView] = useState(true);
@@ -54,17 +54,17 @@ export default function ExploreView({
   }, [exploreMapView, exploreSearch, exploreWardFilter, exploreDeptFilter, exploreStatusFilter]);
 
   // Unique list of ward names for the filter dropdown
-  const uniqueWards = jurisdictions.map(j => j.name.split(' (')[0]).filter((v, i, a) => a.indexOf(v) === i);
+  const uniqueWards = jurisdictions.map(j => (j.name || '').split(' (')[0]).filter((v, i, a) => v && a.indexOf(v) === i);
 
   // Local filtering & sorting logic
   const filteredGrievances = popularGrievances
     .filter(g => {
-      const matchSearch = g.title.toLowerCase().includes(exploreSearch.toLowerCase()) || 
-                          g.description.toLowerCase().includes(exploreSearch.toLowerCase()) ||
-                          g.address.toLowerCase().includes(exploreSearch.toLowerCase());
+      const matchSearch = (g.title || '').toLowerCase().includes(exploreSearch.toLowerCase()) || 
+                          (g.description || '').toLowerCase().includes(exploreSearch.toLowerCase()) ||
+                          (g.address || '').toLowerCase().includes(exploreSearch.toLowerCase());
       const matchWard = exploreWardFilter === 'all' || 
-                        g.jurisdiction_name?.toLowerCase().includes(exploreWardFilter.toLowerCase()) || 
-                        g.address?.toLowerCase().includes(exploreWardFilter.toLowerCase());
+                        (g.jurisdiction_name || '').toLowerCase().includes(exploreWardFilter.toLowerCase()) || 
+                        (g.address || '').toLowerCase().includes(exploreWardFilter.toLowerCase());
       const matchDept = exploreDeptFilter === 'all' || g.department_name === exploreDeptFilter;
       const matchStatus = exploreStatusFilter === 'all' || g.status === exploreStatusFilter;
       return matchSearch && matchWard && matchDept && matchStatus;
