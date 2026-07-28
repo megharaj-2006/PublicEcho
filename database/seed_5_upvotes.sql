@@ -1,5 +1,5 @@
 -- PublicEcho Large Seed File 5: Updates, Notifications, Upvotes, and Feedback Ratings
-USE publicecho;
+USE railway;
 
 -- Clean up previously seeded records for File 5 to prevent duplicate key conflicts during regeneration
 DELETE FROM `ComplaintUpvotes` WHERE `upvote_id` >= 100;

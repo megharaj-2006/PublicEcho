@@ -1,5 +1,5 @@
 -- PublicEcho Large Seed File 2: 225 Bengaluru BBMP Wards
-USE publicecho;
+USE railway;
 
 INSERT INTO `Wards` (`ward_id`, `ward_name`, `zone_name`, `city`) VALUES
 (37, 'Peenya', 'RR Nagar', 'Bengaluru'),

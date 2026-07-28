@@ -1,7 +1,7 @@
 -- Re-build the publicecho database matching the recommended project schema
-DROP DATABASE IF EXISTS publicecho;
-CREATE DATABASE publicecho;
-USE publicecho;
+DROP DATABASE IF EXISTS railway;
+CREATE DATABASE railway;
+USE railway;
 
 -- 1. Roles Table
 CREATE TABLE Roles (
@@ -224,3 +224,28 @@ INSERT INTO Officials (user_id, department_id, ward_id, designation, office_addr
 INSERT INTO Complaints (user_id, category_id, status_id, ward_id, title, description, latitude, longitude, image_url) VALUES
 (3, 1, 1, 150, 'Large pothole near Bellandur signal', 'Road damaged causing traffic issues. Highly dangerous for two-wheelers.', 12.9279000, 77.6762000, 'https://images.unsplash.com/photo-1515162305285-0293e4767cc2'),
 (4, 3, 1, 45, 'Garbage not cleared', 'Garbage pile not cleared for 5 days near the residential colony.', 12.9890000, 77.5713000, 'https://images.unsplash.com/photo-1611284446314-60a58ac0deb9');
+
+
+ALTER TABLE Departments
+ADD COLUMN SLA_days INT;
+
+CREATE TABLE feedback_ratings (
+    rating_id INT PRIMARY KEY,
+    complaint_id INT NOT NULL,
+    official_id INT NOT NULL,
+    rating_speed INT NOT NULL,
+    rating_quality INT NOT NULL,
+    rating_communication INT NOT NULL,
+    comment TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (complaint_id)
+        REFERENCES Complaints(complaint_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+
+    FOREIGN KEY (official_id)
+        REFERENCES Officials(official_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+) ENGINE=InnoDB;

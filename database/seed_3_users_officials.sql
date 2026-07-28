@@ -1,5 +1,5 @@
 -- PublicEcho Large Seed File 3: Users (Citizens, Officials, Admins) and Official Profiles
-USE publicecho;
+USE railway;
 
 -- Citizens (IDs 100 to 599)
 INSERT INTO `Users` (`user_id`, `name`, `email`, `password_hash`, `phone`, `role_id`) VALUES

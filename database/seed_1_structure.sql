@@ -1,5 +1,5 @@
 -- PublicEcho Large Seed File 1: Base structures & metadata
-USE publicecho;
+USE railway;
 
 -- 1. Departments (15 total)
 INSERT INTO `Departments` (`department_id`, `department_name`, `description`, `SLA_days`) VALUES
